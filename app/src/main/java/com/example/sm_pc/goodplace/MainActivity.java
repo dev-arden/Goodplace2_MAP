@@ -1,5 +1,8 @@
 package com.example.sm_pc.goodplace;
 
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -74,6 +77,8 @@ public class MainActivity extends AppCompatActivity {
     private EditText mEditTextName;
     //private EditText mEditTextCountry;
     private TextView mTextViewinsert;
+    private TextView mTextViewID;
+    private TextView mTextViewshowID;
     private TextView mTextViewroute;
     private TextView mTextViewResult;
     private ListView mListViewList;
@@ -95,8 +100,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
+        mTextViewID = (TextView) findViewById(R.id.textView_id);
+        mTextViewshowID = (TextView) findViewById(R.id.textView_showid);
         mTextViewinsert = (TextView) findViewById(R.id.textView_main_name);
-        mTextViewroute = (TextView) findViewById(R.id.textView_main_route);
+//        mTextViewroute = (TextView) findViewById(R.id.textView_main_route);
         mEditTextName = (EditText) findViewById(R.id.editText_main_name);
         //mEditTextCountry = (EditText)findViewById(R.id.editText_main_country);
         mTextViewResult = (TextView) findViewById(R.id.textView_main_result);
@@ -116,6 +124,11 @@ public class MainActivity extends AppCompatActivity {
         r_btn1.setOnClickListener(optionOnClickListener);
         r_btn2.setOnClickListener(optionOnClickListener);
 
+
+        Intent intent = getIntent(); /*데이터 수신*/
+
+        String name = intent.getExtras().getString("name"); /*String형*/
+        mTextViewshowID.setText(name);
 
 
 //        Button button = (Button) findViewById(R.id.subActivity);
@@ -138,6 +151,11 @@ public class MainActivity extends AppCompatActivity {
 
 
                 String name = mEditTextName.getText().toString();
+                //String userID = mTextViewshowID.getText().toString();
+                Intent intent = getIntent(); /*데이터 수신*/
+
+                String userID = intent.getExtras().getString("name"); /*String형*/
+
                 String result =  "0";
                 //String country = mEditTextCountry.getText().toString()
                 if(r_btn1.isChecked())
@@ -145,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
                 else if(r_btn2.isChecked())
                     result = "1";
                 InsertData task = new InsertData();
-                task.execute("http://" + IP_ADDRESS + "/insert", name, result);
+                task.execute("http://" + IP_ADDRESS + "/insert", name, result,userID);
 
 
                 mEditTextName.setText("");
@@ -273,10 +291,11 @@ public class MainActivity extends AppCompatActivity {
 
             String name = (String) params[1];
             String userRoute = (String)params[2];
+            String userID = (String)params[3];
 
             String serverURL = (String) params[0];
             //String postParameters = "name=" + name;
-            String postParameters = "name=" + name + "&userRoute=" + userRoute;
+            String postParameters = "name=" + name + "&userRoute=" + userRoute + "&userID=" + userID;
 
 
             try {
@@ -318,11 +337,11 @@ public class MainActivity extends AppCompatActivity {
                     sb.append(line);
                 }
 
-
                 bufferedReader.close();
 
 
-                return sb.toString();
+//                return sb.toString();
+                return "완료되었습니다";
 
 
             } catch (Exception e) {
@@ -402,8 +421,10 @@ public class MainActivity extends AppCompatActivity {
                 StringBuilder sb = new StringBuilder();
                 String line = null;
 
+
                 while ((line = bufferedReader.readLine()) != null) {
-                    sb.append(line);
+                    Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                    sb.append(gson.toJson(line));
                 }
 
 

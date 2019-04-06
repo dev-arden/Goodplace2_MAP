@@ -6,15 +6,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
-
-import net.daum.mf.map.api.MapPOIItem;
-import net.daum.mf.map.api.MapPoint;
-import net.daum.mf.map.api.MapView;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -23,41 +17,52 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+public class RegistActivity extends AppCompatActivity {
 
-public class SubActivity extends AppCompatActivity {
-
+    private TextView text_result;
+    private EditText editemail;
+    private EditText editpassword;
     private static String IP_ADDRESS = "52.79.88.159:3000";
-    private static String TAG = "phptest";
-    private TextView mTextViewResult;
-
+    private static String TAG = "join and login";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_sub);
+        setContentView(R.layout.activity_regist);
 
-        Button buttonfindplayer = (Button) findViewById(R.id.button_findplayer);
-        mTextViewResult = (TextView) findViewById(R.id.textView_findplayer);
+        text_result = (TextView) findViewById(R.id.textView_result);
+        editemail = (EditText) findViewById(R.id.editText_email);
+        editpassword = (EditText) findViewById(R.id.editText_password);
+        Button buttonregist = (Button) findViewById(R.id.button_regist);
+        Button buttoncancel = (Button) findViewById(R.id.button_cancel);
 
-        buttonfindplayer.setOnClickListener(new View.OnClickListener() {
-
+        buttonregist.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String name = null;
-                findplayer task = new findplayer();
-                task.execute("http://" + IP_ADDRESS + "/findplayer", name);
+
+                String name = editemail.getText().toString();
+                String passwd = editpassword.getText().toString();
+
+                regist task = new regist();
+                task.execute("http://" + IP_ADDRESS + "/join", name,passwd);
+
+
+                editemail.setText("");editpassword.setText("");
+                //mEditTextCountry.setText("");
             }
         });
     }
 
-    class findplayer extends AsyncTask<String, Void, String> {
+
+
+    class regist extends AsyncTask<String, Void, String> {
         ProgressDialog progressDialog;
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
 
-            progressDialog = ProgressDialog.show(SubActivity.this,
+            progressDialog = ProgressDialog.show(RegistActivity.this,
                     "Please Wait", null, true, true);
         }
 
@@ -67,7 +72,7 @@ public class SubActivity extends AppCompatActivity {
             super.onPostExecute(result);
 
             progressDialog.dismiss();
-            mTextViewResult.setText(result);
+            text_result.setText(result);
             Log.d(TAG, "POST response  - " + result);
         }
 
@@ -75,9 +80,12 @@ public class SubActivity extends AppCompatActivity {
         @Override
         protected String doInBackground(String... params) {
 
-            String name = (String) params[1];
+            String email = (String) params[1];
+            String password = (String)params[2];
+
             String serverURL = (String) params[0];
-            String postParameters = "name=" + name ;
+            //String postParameters = "name=" + name;
+            String postParameters = "email=" + email + "&password=" + password;
 
 
             try {
@@ -93,6 +101,7 @@ public class SubActivity extends AppCompatActivity {
 
 
                 OutputStream outputStream = httpURLConnection.getOutputStream();
+                outputStream.write(postParameters.getBytes("UTF-8"));
                 outputStream.flush();
                 outputStream.close();
 
@@ -119,9 +128,11 @@ public class SubActivity extends AppCompatActivity {
                 }
 
 
+                bufferedReader.close();
 
 
-                return sb.toString();
+//                return sb.toString();
+                return "완료되었습니다";
 
 
             } catch (Exception e) {
@@ -134,3 +145,4 @@ public class SubActivity extends AppCompatActivity {
         }
     }
 }
+
