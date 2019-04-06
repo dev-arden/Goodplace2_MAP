@@ -74,11 +74,13 @@ public class MainActivity extends AppCompatActivity {
 //    private static final String TAG_NAME = "STATION_NM";
 //    private static final String TAG_ADDRESS ="LINE_NUM";
 
+    private EditText mEditTextfriend;
     private EditText mEditTextName;
     //private EditText mEditTextCountry;
     private TextView mTextViewinsert;
     private TextView mTextViewID;
     private TextView mTextViewshowID;
+    private TextView mTextViewfriend;
     private TextView mTextViewroute;
     private TextView mTextViewResult;
     private ListView mListViewList;
@@ -100,7 +102,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
+        mEditTextfriend = (EditText) findViewById(R.id.editText_friend);
+        mTextViewfriend = (TextView) findViewById(R.id.textView_friend);
         mTextViewID = (TextView) findViewById(R.id.textView_id);
         mTextViewshowID = (TextView) findViewById(R.id.textView_showid);
         mTextViewinsert = (TextView) findViewById(R.id.textView_main_name);
@@ -112,9 +115,9 @@ public class MainActivity extends AppCompatActivity {
         mTextViewResult.setMovementMethod(new ScrollingMovementMethod());
         Button buttonselect = (Button) findViewById(R.id.button_main_select);
         Button buttonInsert = (Button) findViewById(R.id.button_main_insert);
-        Button buttonresult = (Button) findViewById(R.id.button_main_result);
-        Button buttonranking = (Button) findViewById(R.id.button_show_ranking);
-        Button buttonrouteshow = (Button) findViewById(R.id.button_route_show);
+
+        Button buttonfriend = (Button) findViewById(R.id.button_friend);
+        Button buttonnext = (Button) findViewById(R.id.button_next);
 
         rg = (RadioGroup)findViewById(R.id.radioGroup);
         //final Boolean[] result = new Boolean[1];
@@ -131,17 +134,36 @@ public class MainActivity extends AppCompatActivity {
         mTextViewshowID.setText(name);
 
 
-//        Button button = (Button) findViewById(R.id.subActivity);
-//
-//        button.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Intent intent = new Intent(getApplicationContext(), SubActivity.class);
-//                startActivity(intent);
-//            }
-//        });
+
+        buttonnext.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent2 = new Intent(getApplicationContext(), SubActivity.class);
+
+                Intent intent = getIntent(); /*데이터 수신*/
+
+                String userID = intent.getExtras().getString("name"); /*String형*/
+                intent2.putExtra("name",userID); /*송신*/
+
+                startActivity(intent2);
+            }
+        });
+
+        buttonfriend.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
 
 
+                String userID = mEditTextfriend.getText().toString();
+                friendInsertData task = new friendInsertData();
+                task.execute("http://" + IP_ADDRESS + "/friendinsert", userID);
+
+                mEditTextfriend.setText("");
+                //mEditTextCountry.setText("");
+
+            }
+        });
 
 
         buttonInsert.setOnClickListener(new View.OnClickListener() {
@@ -192,60 +214,6 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-
-        buttonresult.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String name = mEditTextName.getText().toString();
-                //String country = mEditTextCountry.getText().toString();
-
-                resultData task = new resultData();
-                //task.execute("http://" + IP_ADDRESS + "/insert", name,country);
-                task.execute("http://" + IP_ADDRESS + "/result", name);
-
-
-                //mEditTextName.setText("");
-                //mEditTextCountry.setText("");
-
-            }
-        });
-
-        buttonranking.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String name = mEditTextName.getText().toString();
-                //String country = mEditTextCountry.getText().toString();
-
-                rankingData task = new rankingData();
-
-                //task.execute("http://" + IP_ADDRESS + "/insert", name,country);
-                task.execute("http://" + IP_ADDRESS + "/userresult", name);
-
-
-                //mEditTextName.setText("");
-                //mEditTextCountry.setText("");
-
-            }
-        });
-
-        buttonrouteshow.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String name = mEditTextName.getText().toString();
-                //String country = mEditTextCountry.getText().toString();
-
-                showroute task = new showroute();
-
-                //task.execute("http://" + IP_ADDRESS + "/insert", name,country);
-                task.execute("http://" + IP_ADDRESS + "/showroute", name);
-
-
-                //mEditTextName.setText("");
-                //mEditTextCountry.setText("");
-
-            }
-        });
-
 
     }
 
@@ -354,6 +322,95 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+    class friendInsertData extends AsyncTask<String, Void, String> {
+        ProgressDialog progressDialog;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            progressDialog = ProgressDialog.show(MainActivity.this,
+                    "Please Wait", null, true, true);
+        }
+
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+
+            progressDialog.dismiss();
+            mTextViewResult.setText(result);
+            Log.d(TAG, "POST response  - " + result);
+        }
+
+
+        @Override
+        protected String doInBackground(String... params) {
+
+            String userID = (String) params[1];
+
+            String serverURL = (String) params[0];
+            String postParameters = "userID=" + userID;
+
+
+            try {
+
+                URL url = new URL(serverURL);
+                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+
+
+                httpURLConnection.setReadTimeout(5000);
+                httpURLConnection.setConnectTimeout(5000);
+                httpURLConnection.setRequestMethod("POST");
+                httpURLConnection.connect();
+
+
+                OutputStream outputStream = httpURLConnection.getOutputStream();
+                outputStream.write(postParameters.getBytes("UTF-8"));
+                outputStream.flush();
+                outputStream.close();
+
+
+                int responseStatusCode = httpURLConnection.getResponseCode();
+                Log.d(TAG, "POST response code - " + responseStatusCode);
+
+                InputStream inputStream;
+                if (responseStatusCode == HttpURLConnection.HTTP_OK) {
+                    inputStream = httpURLConnection.getInputStream();
+                } else {
+                    inputStream = httpURLConnection.getErrorStream();
+                }
+
+
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+
+                StringBuilder sb = new StringBuilder();
+                String line = null;
+
+                while ((line = bufferedReader.readLine()) != null) {
+                    sb.append(line);
+                }
+
+                bufferedReader.close();
+
+
+//                return sb.toString();
+                return "완료되었습니다";
+
+
+            } catch (Exception e) {
+
+                Log.d(TAG, "InsertData: Error ", e);
+
+                return new String("Error: " + e.getMessage());
+            }
+
+        }
+    }
+
+
     class selectData extends AsyncTask<String, Void, String> {
         ProgressDialog progressDialog;
 
@@ -444,305 +501,5 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    class resultData extends AsyncTask<String, Void, String> {
-        ProgressDialog progressDialog;
 
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-
-            progressDialog = ProgressDialog.show(MainActivity.this,
-                    "Please Wait", null, true, true);
-        }
-
-
-        @Override
-        protected void onPostExecute(String result) {
-            super.onPostExecute(result);
-
-            progressDialog.dismiss();
-            mTextViewResult.setText(result);
-            Log.d(TAG, "POST response  - " + result);
-        }
-
-
-        @Override
-        protected String doInBackground(String... params) {
-
-            String name = (String) params[1];
-            //String country = (String)params[2];
-
-            String serverURL = (String) params[0];
-            String postParameters = "name=" + name;
-
-
-            try {
-
-                URL url = new URL(serverURL);
-                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-
-
-                httpURLConnection.setReadTimeout(500000);
-                httpURLConnection.setConnectTimeout(500000);
-                httpURLConnection.setRequestMethod("POST");
-                httpURLConnection.connect();
-
-
-                OutputStream outputStream = httpURLConnection.getOutputStream();
-                outputStream.write(postParameters.getBytes("UTF-8"));
-                outputStream.flush();
-                outputStream.close();
-
-
-                int responseStatusCode = httpURLConnection.getResponseCode();
-                Log.d(TAG, "POST response code - " + responseStatusCode);
-
-                InputStream inputStream;
-                if (responseStatusCode == HttpURLConnection.HTTP_OK) {
-                    inputStream = httpURLConnection.getInputStream();
-                } else {
-                    inputStream = httpURLConnection.getErrorStream();
-                }
-
-
-                InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
-                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-
-                StringBuilder sb = new StringBuilder();
-                String line = null;
-
-                while ((line = bufferedReader.readLine()) != null) {
-                    sb.append(line);
-                }
-
-
-                bufferedReader.close();
-
-
-//                return sb.toString();
-                return "완료되었습니다";
-
-
-            } catch (Exception e) {
-
-                Log.d(TAG, "SelectData: Error ", e);
-
-                return new String("Error: " + e.getMessage());
-            }
-
-        }
-    }
-
-
-    class rankingData extends AsyncTask<String, Void, String> {
-        ProgressDialog progressDialog;
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-
-            progressDialog = ProgressDialog.show(MainActivity.this,
-                    "Please Wait", null, true, true);
-        }
-
-
-        @Override
-        protected void onPostExecute(String result) {
-            super.onPostExecute(result);
-
-            progressDialog.dismiss();
-            mTextViewResult.setText(result);
-            Log.d(TAG, "POST response  - " + result);
-        }
-
-
-        @Override
-        protected String doInBackground(String... params) {
-
-            String name = (String) params[1];
-            //String country = (String)params[2];
-
-            String serverURL = (String) params[0];
-            String postParameters = "name=" + name;
-
-
-            try {
-
-                URL url = new URL(serverURL);
-                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-
-
-                httpURLConnection.setReadTimeout(50000);
-                httpURLConnection.setConnectTimeout(50000);
-                httpURLConnection.setRequestMethod("POST");
-                httpURLConnection.connect();
-
-
-                OutputStream outputStream = httpURLConnection.getOutputStream();
-                outputStream.write(postParameters.getBytes("UTF-8"));
-                outputStream.flush();
-                outputStream.close();
-
-
-                int responseStatusCode = httpURLConnection.getResponseCode();
-                Log.d(TAG, "POST response code - " + responseStatusCode);
-
-                InputStream inputStream;
-                if (responseStatusCode == HttpURLConnection.HTTP_OK) {
-                    inputStream = httpURLConnection.getInputStream();
-                } else {
-                    inputStream = httpURLConnection.getErrorStream();
-                }
-
-
-                InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
-                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-
-                StringBuilder sb = new StringBuilder();
-                StringBuilder sb2 = new StringBuilder();
-                String line = null;
-
-                while ((line = bufferedReader.readLine()) != null) {
-                    sb.append(line);
-                }
-
-                //JSONObject job = new JSONObject(sb.toString());
-//                JSONArray jarray = new JSONArray(sb.toString());   // JSONArray 생성
-//                for(int i=0; i < jarray.length(); i++){
-//                    JSONObject jObject = jarray.getJSONObject(i);  // JSONObject 추출
-//                    String user = jObject.getString("user");
-//                    String rank = jObject.getString("rank");
-//                    String namename = jObject.getString("name");
-//
-//                    sb2.append("사용자:" + user + "랭킹:" + rank + "지하철명:" + namename + "\n");
-//
-//                }
-
-
-
-
-
-                bufferedReader.close();
-
-
-                return sb.toString();
-                //return "완료되었습니다";
-
-
-            } catch (Exception e) {
-
-                Log.d(TAG, "SelectData: Error ", e);
-
-                return new String("Error: " + e.getMessage());
-            }
-
-        }
-    }
-
-
-
-    class showroute extends AsyncTask<String, Void, String> {
-        ProgressDialog progressDialog;
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-
-            progressDialog = ProgressDialog.show(MainActivity.this,
-                    "Please Wait", null, true, true);
-        }
-
-
-        @Override
-        protected void onPostExecute(String result) {
-            super.onPostExecute(result);
-
-            progressDialog.dismiss();
-            mTextViewResult.setText(result);
-            Log.d(TAG, "POST response  - " + result);
-        }
-
-
-        @Override
-        protected String doInBackground(String... params) {
-
-            String name = (String) params[1];
-            //String country = (String)params[2];
-
-            String serverURL = (String) params[0];
-            String postParameters = "name=" + name;
-
-
-            try {
-
-                URL url = new URL(serverURL);
-                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-
-
-                httpURLConnection.setReadTimeout(50000);
-                httpURLConnection.setConnectTimeout(50000);
-                httpURLConnection.setRequestMethod("POST");
-                httpURLConnection.connect();
-
-
-                OutputStream outputStream = httpURLConnection.getOutputStream();
-                outputStream.write(postParameters.getBytes("UTF-8"));
-                outputStream.flush();
-                outputStream.close();
-
-
-                int responseStatusCode = httpURLConnection.getResponseCode();
-                Log.d(TAG, "POST response code - " + responseStatusCode);
-
-                InputStream inputStream;
-                if (responseStatusCode == HttpURLConnection.HTTP_OK) {
-                    inputStream = httpURLConnection.getInputStream();
-                } else {
-                    inputStream = httpURLConnection.getErrorStream();
-                }
-
-
-                InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
-                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-
-                StringBuilder sb = new StringBuilder();
-                StringBuilder sb2 = new StringBuilder();
-                String line = null;
-
-                while ((line = bufferedReader.readLine()) != null) {
-                    sb.append(line);
-                }
-
-                //JSONObject job = new JSONObject(sb.toString());
-//                JSONArray jarray = new JSONArray(sb.toString());   // JSONArray 생성
-//                for(int i=0; i < jarray.length(); i++){
-//                    JSONObject jObject = jarray.getJSONObject(i);  // JSONObject 추출
-//                    String user = jObject.getString("user");
-//                    String rank = jObject.getString("rank");
-//                    String namename = jObject.getString("name");
-//
-//                    sb2.append("사용자:" + user + "랭킹:" + rank + "지하철명:" + namename + "\n");
-//
-//                }
-
-
-
-
-
-                bufferedReader.close();
-
-
-                return sb.toString();
-                //return "완료되었습니다";
-
-
-            } catch (Exception e) {
-
-                Log.d(TAG, "SelectData: Error ", e);
-
-                return new String("Error: " + e.getMessage());
-            }
-
-        }
-    }
 }
