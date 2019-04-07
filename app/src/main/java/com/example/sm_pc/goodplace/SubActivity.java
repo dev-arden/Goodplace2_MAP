@@ -52,6 +52,7 @@ public class SubActivity extends AppCompatActivity {
         Button buttonresult = (Button) findViewById(R.id.button_main_result);
         Button buttonranking = (Button) findViewById(R.id.button_show_ranking);
         Button buttonrouteshow = (Button) findViewById(R.id.button_route_show);
+        Button buttonfriendrouteshow = (Button) findViewById(R.id.button_friend_ranking);
 
 
         Intent intent2 = getIntent(); /*데이터 수신*/
@@ -114,6 +115,24 @@ public class SubActivity extends AppCompatActivity {
 
                 //task.execute("http://" + IP_ADDRESS + "/insert", name,country);
                 task.execute("http://" + IP_ADDRESS + "/showroute", name,userID);
+
+
+                //mEditTextName.setText("");
+                //mEditTextCountry.setText("");
+
+            }
+        });
+
+        buttonfriendrouteshow.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String name = mEditTextName.getText().toString();
+                //String country = mEditTextCountry.getText().toString();
+
+                friendshowroute task = new friendshowroute();
+
+                //task.execute("http://" + IP_ADDRESS + "/insert", name,country);
+                task.execute("http://" + IP_ADDRESS + "/friendshowroute", name);
 
 
                 //mEditTextName.setText("");
@@ -350,6 +369,110 @@ public class SubActivity extends AppCompatActivity {
 
             String serverURL = (String) params[0];
             String postParameters = "name=" + name + "&userID=" + userID;
+
+            try {
+
+                URL url = new URL(serverURL);
+                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+
+
+                httpURLConnection.setReadTimeout(50000);
+                httpURLConnection.setConnectTimeout(50000);
+                httpURLConnection.setRequestMethod("POST");
+                httpURLConnection.connect();
+
+
+                OutputStream outputStream = httpURLConnection.getOutputStream();
+                outputStream.write(postParameters.getBytes("UTF-8"));
+                outputStream.flush();
+                outputStream.close();
+
+
+                int responseStatusCode = httpURLConnection.getResponseCode();
+                Log.d(TAG, "POST response code - " + responseStatusCode);
+
+                InputStream inputStream;
+                if (responseStatusCode == HttpURLConnection.HTTP_OK) {
+                    inputStream = httpURLConnection.getInputStream();
+                } else {
+                    inputStream = httpURLConnection.getErrorStream();
+                }
+
+
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+
+                StringBuilder sb = new StringBuilder();
+                StringBuilder sb2 = new StringBuilder();
+                String line = null;
+
+                while ((line = bufferedReader.readLine()) != null) {
+                    sb.append(line);
+                }
+
+                //JSONObject job = new JSONObject(sb.toString());
+//                JSONArray jarray = new JSONArray(sb.toString());   // JSONArray 생성
+//                for(int i=0; i < jarray.length(); i++){
+//                    JSONObject jObject = jarray.getJSONObject(i);  // JSONObject 추출
+//                    String user = jObject.getString("user");
+//                    String rank = jObject.getString("rank");
+//                    String namename = jObject.getString("name");
+//
+//                    sb2.append("사용자:" + user + "랭킹:" + rank + "지하철명:" + namename + "\n");
+//
+//                }
+
+
+
+
+
+                bufferedReader.close();
+
+
+                return sb.toString();
+                //return "완료되었습니다";
+
+
+            } catch (Exception e) {
+
+                Log.d(TAG, "SelectData: Error ", e);
+
+                return new String("Error: " + e.getMessage());
+            }
+
+        }
+    }
+
+    class friendshowroute extends AsyncTask<String, Void, String> {
+        ProgressDialog progressDialog;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            progressDialog = ProgressDialog.show(SubActivity.this,
+                    "Please Wait", null, true, true);
+        }
+
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+
+            progressDialog.dismiss();
+            mTextViewResult.setText(result);
+            Log.d(TAG, "POST response  - " + result);
+        }
+
+
+        @Override
+        protected String doInBackground(String... params) {
+
+            String name = (String) params[1];
+            //String userID = (String)params[2];
+
+            String serverURL = (String) params[0];
+            String postParameters = "name=" + name ;
 
             try {
 
