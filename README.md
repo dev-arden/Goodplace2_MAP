@@ -1,4 +1,4 @@
-# 사용자 간 최적 만남 장소 추천 서비스 - 모바일(안드로이드)
+# 사용자 간 최적 만남 장소 추천 서비스 - 모바일(안드로이드)#2
 ## 목적
 * 모임 장소를 정할 때 시간이 오래 걸리는 문제점 해결
 * 한강 위, 산속 등 실제 갈 수 없는 장소를 추천하는 유사 서비스의 문제점 해결
@@ -24,3 +24,4 @@
 ## 관련 깃헙 링크
 * 서버 파트 : <https://github.com/smulionOong/networking_graduate>
 * 알고리즘 파트 : <https://github.com/smulionOong/algorithm_odsay2>
+* 모바일(안드로이드)#1 : <https://github.com/smulionOong/Goodplace>
